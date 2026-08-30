@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from sqlalchemy import select
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -15,16 +16,17 @@ class BlackHoleTestCase(unittest.TestCase):
         self.app.config["TESTING"] = True
         self.app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
         self.client = self.app.test_client()
-        
-        with self.app.app_context():
-            db.create_all()
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
         cache_service.clear()
 
     def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
+        db.session.remove()
+        db.drop_all()
         cache_service.clear()
+        if hasattr(self, "app_context"):
+            self.app_context.pop()
 
     def test_homepage_render(self):
         """Test homepage renders with HTTP 200 and BlackHole branding."""
@@ -75,19 +77,17 @@ class BlackHoleTestCase(unittest.TestCase):
 
     def test_query_logging_and_trending(self):
         """Test SQLite logging and trending query retrieval."""
-        from sqlalchemy import select
         self.client.get("/search?q=quasar")
         self.client.get("/search?q=quasar")
         self.client.get("/search?q=nebula")
 
-        with self.app.app_context():
-            logs = db.session.scalars(select(QueryLog)).all()
-            self.assertEqual(len(logs), 3)
+        logs = db.session.scalars(select(QueryLog)).all()
+        self.assertEqual(len(logs), 3)
 
-            trending = QueryLog.get_trending(limit=5)
-            self.assertGreaterEqual(len(trending), 2)
-            self.assertEqual(trending[0]["query"].lower(), "quasar")
-            self.assertEqual(trending[0]["count"], 2)
+        trending = QueryLog.get_trending(limit=5)
+        self.assertGreaterEqual(len(trending), 2)
+        self.assertEqual(trending[0]["query"].lower(), "quasar")
+        self.assertEqual(trending[0]["count"], 2)
 
     def test_api_trending_endpoint(self):
         """Test /api/trending JSON endpoint."""

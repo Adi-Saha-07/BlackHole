@@ -3,7 +3,6 @@ from app.services.search_api import fetch_google_search
 from app.services.cache import cache_service
 from app.models.history import QueryLog
 from app.services.ai_service import generate_ai_overview, generate_gemini_response
-import os
 
 main_bp = Blueprint("main", __name__)
 
