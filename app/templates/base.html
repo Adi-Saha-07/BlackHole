@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}BlackHole Search{% endblock %}</title>
+    <meta name="description" content="{% block meta_desc %}BlackHole — Fast, private search with AI assistance.{% endblock %}">
+    <meta name="theme-color" content="#0f1117">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800&family=JetBrains+Mono:wght@500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<!-- ── Progress Bar ── -->
+<div class="bh-progress-bar" id="progress-bar"></div>
+
+<!--
+    Push layout wrapper:
+    When AI panel opens, page adapts smoothly and stays centered.
+-->
+<div class="bh-page-wrap" id="bh-page-wrap">
+    {% block body %}{% endblock %}
+
+    <!-- ── AI FAB Button ── -->
+    <button class="bh-ai-fab" id="bh-ai-fab" onclick="openAiPanel()" aria-label="Open BlackHole AI">
+        <svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px;">
+            <circle cx="12" cy="12" r="9" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="40 16" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="4.5" fill="#fbbf24"/>
+        </svg>
+        BlackHole AI
+        <span class="bh-ai-dot"></span>
+    </button>
+</div>
+
+<!-- ── BlackHole AI Side Panel ── -->
+<aside class="bh-ai-panel" id="bh-ai-panel" role="complementary" aria-label="BlackHole AI Chat">
+
+    <!-- Header -->
+    <div class="bh-ai-panel-header">
+        <div class="bh-ai-panel-title">
+            <div class="bh-ai-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="40 16" stroke-linecap="round"/>
+                    <circle cx="12" cy="12" r="4.5" fill="#fbbf24"/>
+                </svg>
+            </div>
+            <span>BlackHole AI</span>
+        </div>
+        <button class="bh-ai-close-btn" onclick="closeAiPanel()" aria-label="Close AI Panel">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Messages -->
+    <div class="bh-chat-messages" id="chat-messages">
+        <div class="bh-chat-empty" id="chat-empty">
+            <svg viewBox="0 0 24 24" fill="none" style="width:40px;height:40px;">
+                <circle cx="12" cy="12" r="9" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="40 16" stroke-linecap="round"/>
+                <circle cx="12" cy="12" r="4.5" fill="#fbbf24"/>
+            </svg>
+            <p><strong>Ask BlackHole AI anything.</strong><br>Intelligent answers, reasoning, and search insights.</p>
+        </div>
+    </div>
+
+    <!-- Premium Borderless Chat Input Capsule -->
+    <div class="bh-chat-input-wrap">
+        <div class="bh-chat-input-capsule">
+            <textarea
+                id="ai-chat-input"
+                class="bh-chat-input"
+                placeholder="Ask BlackHole AI anything…"
+                rows="1"
+                aria-label="Chat message"
+            ></textarea>
+            <div class="bh-chat-actions">
+                <!-- Voice Typing Mic -->
+                <button
+                    type="button"
+                    class="bh-mic-btn"
+                    id="ai-mic-btn"
+                    aria-label="Voice typing"
+                    title="Speak to type"
+                    onclick="startVoiceTyping('ai-chat-input', 'ai-mic-btn')"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="22"/>
+                    </svg>
+                </button>
+                <!-- Send Button -->
+                <button
+                    type="button"
+                    class="bh-chat-send-btn"
+                    id="ai-send-btn"
+                    aria-label="Send"
+                    title="Send message"
+                    onclick="sendAiMessage()"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<!-- ── Scripts ── -->
+<script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
+<script>
+    /* ── AI Panel Open/Close ── */
+    function openAiPanel() {
+        document.body.classList.add('ai-open');
+        document.getElementById('bh-ai-panel').classList.add('open');
+        var fab = document.getElementById('bh-ai-fab');
+        if (fab) fab.style.opacity = '0';
+
+        setTimeout(function () {
+            var inp = document.getElementById('ai-chat-input');
+            if (inp) inp.focus();
+        }, 320);
+    }
+
+    function closeAiPanel() {
+        document.body.classList.remove('ai-open');
+        document.getElementById('bh-ai-panel').classList.remove('open');
+        var fab = document.getElementById('bh-ai-fab');
+        if (fab) fab.style.opacity = '1';
+    }
+
+    /* ── Close on Escape ── */
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAiPanel();
+    });
+
+    /* ── Live Clock ── */
+    function updateClock() {
+        var t = document.getElementById('live-time');
+        var d = document.getElementById('live-date');
+        if (!t) return;
+        var now = new Date();
+        t.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        if (d) d.textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* ── Web Speech API: Voice Typing ── */
+    function startVoiceTyping(targetInputId, btnId) {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Voice search is supported in Chrome, Edge, and modern browsers.");
+            return;
+        }
+
+        var btn   = document.getElementById(btnId);
+        var input = document.getElementById(targetInputId);
+        if (!input) return;
+
+        var recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        if (btn) btn.classList.add('recording');
+
+        recognition.onresult = function (event) {
+            var text = event.results[0][0].transcript;
+            if (text) {
+                input.value = text;
+                input.dispatchEvent(new Event('input'));
+                input.focus();
+            }
+        };
+
+        recognition.onerror = function () {
+            if (btn) btn.classList.remove('recording');
+        };
+
+        recognition.onend = function () {
+            if (btn) btn.classList.remove('recording');
+        };
+
+        recognition.start();
+    }
+
+    /* ── Textarea auto-resize ── */
+    document.addEventListener('DOMContentLoaded', function () {
+        var ta = document.getElementById('ai-chat-input');
+        if (ta) {
+            ta.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+            ta.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAiMessage(); }
+            });
+        }
+    });
+
+    /* ── BlackHole AI Chat Logic ── */
+    var chatHistory = [];
+
+    function escapeHtml(str) {
+        return (str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function renderAiMarkdown(raw) {
+        if (!raw) return '';
+        var text = raw;
+
+        // 1. Extract and preserve code blocks
+        var codeBlocks = [];
+        text = text.replace(/```([a-zA-Z0-9_\-\+\#]*)\n([\s\S]*?)```/g, function(match, lang, code) {
+            var id = '___CODE_BLOCK_' + codeBlocks.length + '___';
+            lang = (lang || 'code').trim().toLowerCase();
+            codeBlocks.push({
+                lang: lang,
+                code: code.replace(/\n$/, '')
+            });
+            return id;
+        });
+
+        // 2. Escape HTML
+        text = escapeHtml(text);
+
+        // 3. Headers
+        text = text.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+        text = text.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+        text = text.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+        text = text.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>');
+        text = text.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
+        text = text.replace(/^#\s+(.+)$/gm, '<h2>$1</h2>');
+
+        // 4. Horizontal Rules
+        text = text.replace(/^(?:---|___|\*\*\*)$/gm, '<hr>');
+
+        // 5. Bold & Italic
+        text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
+        text = text.replace(/\*([^\*\n]+)\*/g, '<em>$1</em>');
+        text = text.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+
+        // 6. Inline code
+        text = text.replace(/`([^`\n]+)`/g, '<code class="bh-inline-code">$1</code>');
+
+        // 7. Bullet lists
+        text = text.replace(/^[\*\-•]\s+(.+)$/gm, '<li>$1</li>');
+        text = text.replace(/((?:<li>.*<\/li>\s*)+)/g, '<ul>$1</ul>');
+
+        // 8. Paragraphs and line breaks
+        text = text.replace(/\n\n+/g, '</p><p>');
+        text = text.replace(/\n/g, '<br>');
+        text = '<div class="bh-msg-content"><p>' + text + '</p></div>';
+
+        // 9. Clean up empty paragraphs around block tags
+        text = text.replace(/<p>\s*<\/p>/g, '');
+        text = text.replace(/<p>\s*(<h[1-6]>)/g, '$1');
+        text = text.replace(/(<\/h[1-6]>)\s*<\/p>/g, '$1');
+        text = text.replace(/<p>\s*(<hr>)/g, '$1');
+        text = text.replace(/(<hr>)\s*<\/p>/g, '$1');
+        text = text.replace(/<p>\s*(<ul>)/g, '$1');
+        text = text.replace(/(<\/ul>)\s*<\/p>/g, '$1');
+
+        // 10. Re-insert formatted code blocks with language badge and individual copy button
+        codeBlocks.forEach(function(item, idx) {
+            var blockPlaceholder = '___CODE_BLOCK_' + idx + '___';
+            var escapedCode = escapeHtml(item.code);
+            var displayLang = item.lang ? item.lang.toUpperCase() : 'CODE';
+            var codeHtml = 
+                '<div class="bh-code-wrap">' +
+                    '<div class="bh-code-header">' +
+                        '<span class="bh-code-lang">' + displayLang + '</span>' +
+                        '<button type="button" class="bh-code-copy-btn" onclick="copyCodeBlock(this)" title="Copy snippet">' +
+                            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+                            '<span>Copy code</span>' +
+                        '</button>' +
+                    '</div>' +
+                    '<pre><code>' + escapedCode + '</code></pre>' +
+                '</div>';
+            text = text.replace(blockPlaceholder, codeHtml);
+        });
+
+        return text;
+    }
+
+    /* ── Universal Clipboard Copy Engine ── */
+    function copyToClipboard(text, btn) {
+        if (!text || !btn) return;
+        
+        function showSuccess() {
+            var prevHtml = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span style="color:#34d399">Copied!</span>';
+            setTimeout(function() {
+                btn.classList.remove('copied');
+                btn.innerHTML = prevHtml;
+            }, 2000);
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(showSuccess).catch(function() {
+                fallbackCopy(text, showSuccess);
+            });
+        } else {
+            fallbackCopy(text, showSuccess);
+        }
+    }
+
+    function fallbackCopy(text, callback) {
+        var textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            if (callback) callback();
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function copyBubbleText(btn) {
+        var msgEl = btn.closest('.bh-msg');
+        if (!msgEl) return;
+        var rawText = msgEl.getAttribute('data-raw-text');
+        if (!rawText) {
+            var bubble = msgEl.querySelector('.bh-msg-content') || msgEl.querySelector('.bh-msg-bubble');
+            rawText = bubble ? bubble.innerText : '';
+        }
+        copyToClipboard(rawText, btn);
+    }
+
+    function copyCodeBlock(btn) {
+        var wrap = btn.closest('.bh-code-wrap');
+        if (!wrap) return;
+        var codeEl = wrap.querySelector('code');
+        var codeText = codeEl ? codeEl.innerText : '';
+        copyToClipboard(codeText, btn);
+    }
+
+    function copyAiOverview(btn) {
+        var card = document.getElementById('ai-overview-card');
+        var body = document.getElementById('ai-overview-body');
+        var text = (card && card.getAttribute('data-raw-text')) || (body ? body.innerText : '');
+        copyToClipboard(text, btn);
+    }
+
+    function appendMsg(role, text, animate) {
+        var container = document.getElementById('chat-messages');
+        var empty     = document.getElementById('chat-empty');
+        if (empty) empty.style.display = 'none';
+
+        var roleHeader = role === 'user' 
+            ? 'You' 
+            : '<span class="bh-msg-logo"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="40 16" stroke-linecap="round"/><circle cx="12" cy="12" r="4.5" fill="#fbbf24"/></svg></span> BlackHole AI';
+
+        var el = document.createElement('div');
+        el.className = 'bh-msg ' + role;
+        el.setAttribute('data-raw-text', text);
+
+        if (role === 'ai') {
+            var formattedBody = renderAiMarkdown(text);
+            var footerHtml = 
+                '<div class="bh-msg-footer">' +
+                    '<button type="button" class="bh-msg-copy-btn" onclick="copyBubbleText(this)" title="Copy entire response">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+                        '<span>Copy</span>' +
+                    '</button>' +
+                '</div>';
+            el.innerHTML =
+                '<div class="bh-msg-role">' + roleHeader + '</div>' +
+                '<div class="bh-msg-bubble">' + formattedBody + footerHtml + '</div>';
+        } else {
+            el.innerHTML =
+                '<div class="bh-msg-role">' + roleHeader + '</div>' +
+                '<div class="bh-msg-bubble">' + escapeHtml(text).replace(/\n/g, '<br>') + '</div>';
+        }
+
+        if (animate) el.style.animation = 'bhSlideIn 0.2s ease both';
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+        return el;
+    }
+
+    function appendTyping() {
+        var container = document.getElementById('chat-messages');
+        var empty     = document.getElementById('chat-empty');
+        if (empty) empty.style.display = 'none';
+        var el = document.createElement('div');
+        el.className = 'bh-msg ai';
+        el.id = 'bh-typing-indicator';
+        el.innerHTML = '<div class="bh-msg-role"><span class="bh-msg-logo"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="40 16" stroke-linecap="round"/><circle cx="12" cy="12" r="4.5" fill="#fbbf24"/></svg></span> BlackHole AI</div><div class="bh-msg-bubble bh-typing"><span></span><span></span><span></span></div>';
+        container.appendChild(el);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function removeTyping() {
+        var el = document.getElementById('bh-typing-indicator');
+        if (el) el.remove();
+    }
+
+    async function sendAiMessage() {
+        var input   = document.getElementById('ai-chat-input');
+        var sendBtn = document.getElementById('ai-send-btn');
+        var text    = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        input.style.height = 'auto';
+        sendBtn.disabled = true;
+
+        appendMsg('user', text, true);
+        chatHistory.push({ role: 'user', content: text });
+        appendTyping();
+
+        try {
+            var res = await fetch('/api/ai-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, history: chatHistory })
+            });
+            removeTyping();
+            if (res.ok) {
+                var data  = await res.json();
+                var reply = data.reply || 'No response generated.';
+                appendMsg('ai', reply, true);
+                chatHistory.push({ role: 'model', content: reply });
+            } else {
+                var err = await res.json().catch(function () { return {}; });
+                appendMsg('ai', err.error || 'BlackHole AI service is unavailable. Please check your API key in .env.', true);
+            }
+        } catch (e) {
+            removeTyping();
+            appendMsg('ai', 'Connection error. Make sure your server is active.', true);
+        } finally {
+            sendBtn.disabled = false;
+            input.focus();
+        }
+    }
+</script>
+</body>
+</html>
