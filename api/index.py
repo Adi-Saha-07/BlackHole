@@ -2,14 +2,20 @@ import os
 import sys
 import traceback
 
-# Make sure project root is on the path (needed when Vercel CWD is /var/task)
-_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _root not in sys.path:
-    sys.path.insert(0, _root)
+# Ensure all potential root directories are on sys.path in serverless environment
+_cwd = os.getcwd()
+_file_dir = os.path.dirname(os.path.abspath(__file__))
+_parent_dir = os.path.dirname(_file_dir)
+
+for _p in [_cwd, _parent_dir, _file_dir]:
+    if _p and _p not in sys.path:
+        sys.path.insert(0, _p)
 
 try:
     from app import create_app
     app = create_app("production")
+    application = app
+    handler = app
 except Exception:
     _init_error = traceback.format_exc()
 
