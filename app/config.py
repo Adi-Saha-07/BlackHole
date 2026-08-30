@@ -7,6 +7,14 @@ except ImportError:
     pass
 
 
+def _safe_int(val, default):
+    try:
+        val_str = str(val if val is not None else "").strip()
+        return int(val_str) if val_str else default
+    except (ValueError, TypeError):
+        return default
+
+
 def _build_db_uri():
     db_env = os.environ.get("DATABASE_URL", "").strip()
     if db_env:
@@ -43,7 +51,7 @@ class Config:
 
     # Redis
     REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-    CACHE_DEFAULT_TTL = int(os.environ.get("CACHE_DEFAULT_TTL", 600))
+    CACHE_DEFAULT_TTL = _safe_int(os.environ.get("CACHE_DEFAULT_TTL"), 600)
 
     # SQLite Database URI
     SQLALCHEMY_DATABASE_URI = _build_db_uri()
