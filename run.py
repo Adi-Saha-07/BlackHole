@@ -8,7 +8,7 @@ except ImportError:
 
 from app import create_app
 
-env_name = os.environ.get("FLASK_ENV", "development")
+env_name = "production" if os.environ.get("VERCEL") else os.environ.get("FLASK_ENV", "development")
 app = create_app(env_name)
 
 if __name__ == "__main__":
