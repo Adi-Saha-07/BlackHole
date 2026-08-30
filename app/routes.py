@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, render_template, current_app
-from app.services.search_api import fetch_google_search
+from app.services.search_api import fetch_google_search, fetch_image_search, fetch_video_search
 from app.services.cache import cache_service
 from app.models.history import QueryLog
 from app.services.ai_service import generate_ai_overview, generate_gemini_response
@@ -151,3 +151,25 @@ def search():
         "source": results.get("source", "google_api"),
         "cached": False
     })
+
+
+@main_bp.route("/api/images", methods=["GET"])
+def api_images():
+    """Returns image search results for a query from DuckDuckGo."""
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"status": "error", "message": "Query 'q' is required.", "items": []}), 400
+    num = min(int(request.args.get("num", 20)), 40)
+    data = fetch_image_search(query=query, num=num)
+    return jsonify({"status": "success", "query": query, "items": data.get("items", []), "source": data.get("source", "")})
+
+
+@main_bp.route("/api/videos", methods=["GET"])
+def api_videos():
+    """Returns video search results for a query from DuckDuckGo."""
+    query = request.args.get("q", "").strip()
+    if not query:
+        return jsonify({"status": "error", "message": "Query 'q' is required.", "items": []}), 400
+    num = min(int(request.args.get("num", 12)), 24)
+    data = fetch_video_search(query=query, num=num)
+    return jsonify({"status": "success", "query": query, "items": data.get("items", []), "source": data.get("source", "")})

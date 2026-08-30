@@ -694,6 +694,181 @@ body.ai-open .bh-ai-fab {
 }
 
 /* ----------------------------------------
+   IMAGE GRID — Images Tab
+---------------------------------------- */
+.bh-img-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    padding: 4px 0 20px;
+}
+.bh-img-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #13151b;
+    border: 1px solid #1e2028;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.bh-img-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(251,191,36,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.bh-img-thumb-wrap {
+    width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: #1a1d26;
+}
+.bh-img-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+}
+.bh-img-card:hover .bh-img-thumb-wrap img {
+    transform: scale(1.05);
+}
+.bh-img-caption {
+    font-size: 0.72rem;
+    color: #8b939e;
+    padding: 0 8px 8px;
+    line-height: 1.35;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* ----------------------------------------
+   VIDEO GRID — Videos Tab
+---------------------------------------- */
+.bh-video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    padding: 4px 0 20px;
+}
+.bh-video-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #13151b;
+    border: 1px solid #1e2028;
+    text-decoration: none;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.bh-video-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(251,191,36,0.35);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
+.bh-video-thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #0d0f14;
+    overflow: hidden;
+}
+.bh-video-thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+}
+.bh-video-card:hover .bh-video-thumb-wrap img {
+    transform: scale(1.04);
+}
+.bh-video-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1d26, #0d0f14);
+}
+.bh-video-play-icon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+    transition: background 0.18s ease;
+}
+.bh-video-play-icon svg {
+    width: 40px;
+    height: 40px;
+    color: rgba(255,255,255,0.85);
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+    transition: transform 0.18s ease;
+}
+.bh-video-card:hover .bh-video-play-icon {
+    background: rgba(0,0,0,0.15);
+}
+.bh-video-card:hover .bh-video-play-icon svg {
+    transform: scale(1.15);
+    color: #fbbf24;
+}
+.bh-video-duration {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.bh-video-info {
+    padding: 10px 12px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.bh-video-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e2e4e9;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.bh-video-pub {
+    font-size: 0.7rem;
+    color: #fbbf24;
+    font-weight: 600;
+}
+.bh-video-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* ── Tab loading states ── */
+.bh-tab-loader, .bh-tab-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 60px 20px;
+    color: #8b939e;
+    font-size: 0.85rem;
+}
+
+/* ----------------------------------------
    AI CHAT PANEL — push-in from right
    No overlay. Panel slides in, page slides left.
 ---------------------------------------- */

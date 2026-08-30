@@ -149,3 +149,53 @@ def get_mock_search_results(query: str, num: int = 10) -> dict:
         "items": cosmic_data[:num],
         "source": "mock_data"
     }
+
+
+def fetch_image_search(query: str, num: int = 20) -> dict:
+    """
+    Fetch image results from DuckDuckGo.
+    Returns list of {title, image, thumbnail, url, source}.
+    """
+    try:
+        from ddgs import DDGS
+        items = []
+        with DDGS() as ddgs:
+            for r in ddgs.images(query, max_results=num):
+                items.append({
+                    "title": r.get("title", ""),
+                    "image": r.get("image", ""),
+                    "thumbnail": r.get("thumbnail", r.get("image", "")),
+                    "url": r.get("url", "#"),
+                    "source": r.get("source", "")
+                })
+        return {"query": query, "items": items, "source": "duckduckgo_images"}
+    except Exception as e:
+        logger.warning(f"DuckDuckGo image search failed: {e}")
+        return {"query": query, "items": [], "source": "error", "error": str(e)}
+
+
+def fetch_video_search(query: str, num: int = 12) -> dict:
+    """
+    Fetch video results from DuckDuckGo.
+    Returns list of {title, description, embed_url, thumbnail, duration, publisher}.
+    """
+    try:
+        from ddgs import DDGS
+        items = []
+        with DDGS() as ddgs:
+            for r in ddgs.videos(query, max_results=num):
+                # Build watchable link — prefer embed_html or content
+                embed_url = r.get("embed_url", "") or r.get("content", "")
+                items.append({
+                    "title": r.get("title", ""),
+                    "description": r.get("description", ""),
+                    "embed_url": embed_url,
+                    "thumbnail": r.get("images", {}).get("large", "") or r.get("images", {}).get("small", ""),
+                    "duration": r.get("duration", ""),
+                    "publisher": r.get("publisher", ""),
+                    "published": r.get("published", "")
+                })
+        return {"query": query, "items": items, "source": "duckduckgo_videos"}
+    except Exception as e:
+        logger.warning(f"DuckDuckGo video search failed: {e}")
+        return {"query": query, "items": [], "source": "error", "error": str(e)}
