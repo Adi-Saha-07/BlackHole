@@ -18,11 +18,11 @@ class Config:
     REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     CACHE_DEFAULT_TTL = int(os.environ.get("CACHE_DEFAULT_TTL", 600))  # 10 minutes
     
-    # SQLite Database Configuration
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", 
-        f"sqlite:///{os.path.join(os.path.abspath(os.path.dirname(__file__)), 'blackhole.db')}"
-    )
+    # SQLite Database Configuration (with /tmp fallback for Vercel / serverless)
+    _is_serverless = os.environ.get("VERCEL") == "1" or os.environ.get("NOW_REGION") is not None
+    _default_db_path = "/tmp/blackhole.db" if _is_serverless else os.path.join(os.path.abspath(os.path.dirname(__file__)), "blackhole.db")
+    
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{_default_db_path}")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class DevelopmentConfig(Config):

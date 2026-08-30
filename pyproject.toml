@@ -4,11 +4,14 @@ version = "1.0.0"
 description = "BlackHole Flask Application"
 requires-python = ">=3.12"
 dependencies = [
-    "flask",
-    "requests",
-    "python-dotenv",
-    "google-generativeai",
+    "flask>=3.0.0",
+    "flask-sqlalchemy>=3.1.1",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "gunicorn>=21.0.0",
+    "redis>=5.0.0",
 ]
 
 [tool.vercel]
-entrypoint = "run:app"
+entrypoint = "app:app"
+
