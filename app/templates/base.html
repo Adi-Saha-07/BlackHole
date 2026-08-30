@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
     <title>{% block title %}BlackHole Search{% endblock %}</title>
     <meta name="description" content="{% block meta_desc %}BlackHole — Fast, private search with AI assistance.{% endblock %}">
     <meta name="theme-color" content="#0f1117">
@@ -120,27 +120,62 @@
     /* ── AI Panel Open/Close ── */
     function openAiPanel() {
         document.body.classList.add('ai-open');
-        document.getElementById('bh-ai-panel').classList.add('open');
+        var panel = document.getElementById('bh-ai-panel');
+        if (panel) panel.classList.add('open');
         var fab = document.getElementById('bh-ai-fab');
         if (fab) fab.style.opacity = '0';
 
+        // Smooth focus after animation settles
         setTimeout(function () {
             var inp = document.getElementById('ai-chat-input');
-            if (inp) inp.focus();
-        }, 320);
+            if (inp) {
+                inp.focus();
+                scrollChatToBottom();
+            }
+        }, 380);
     }
 
     function closeAiPanel() {
         document.body.classList.remove('ai-open');
-        document.getElementById('bh-ai-panel').classList.remove('open');
+        var panel = document.getElementById('bh-ai-panel');
+        if (panel) panel.classList.remove('open');
         var fab = document.getElementById('bh-ai-fab');
         if (fab) fab.style.opacity = '1';
+        
+        // Reset any visualViewport offset
+        if (panel) panel.style.height = '';
+    }
+
+    function scrollChatToBottom() {
+        var container = document.getElementById('chat-messages');
+        if (container) {
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }
     }
 
     /* ── Close on Escape ── */
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeAiPanel();
     });
+
+    /* ── Visual Viewport Keyboard Adjustment (iOS Safari & Chrome Android) ── */
+    if (window.visualViewport) {
+        function handleViewportResize() {
+            var panel = document.getElementById('bh-ai-panel');
+            if (!panel || !document.body.classList.contains('ai-open')) return;
+            
+            if (window.innerWidth <= 640) {
+                panel.style.height = window.visualViewport.height + 'px';
+                panel.style.top = window.visualViewport.offsetTop + 'px';
+                scrollChatToBottom();
+            } else {
+                panel.style.height = '';
+                panel.style.top = '';
+            }
+        }
+        window.visualViewport.addEventListener('resize', handleViewportResize);
+        window.visualViewport.addEventListener('scroll', handleViewportResize);
+    }
 
     /* ── Live Clock ── */
     function updateClock() {
@@ -179,6 +214,7 @@
                 input.value = text;
                 input.dispatchEvent(new Event('input'));
                 input.focus();
+                scrollChatToBottom();
             }
         };
 
@@ -193,7 +229,7 @@
         recognition.start();
     }
 
-    /* ── Textarea auto-resize ── */
+    /* ── Textarea auto-resize & keyboard focus handling ── */
     document.addEventListener('DOMContentLoaded', function () {
         var ta = document.getElementById('ai-chat-input');
         if (ta) {
@@ -201,8 +237,14 @@
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
+            ta.addEventListener('focus', function () {
+                setTimeout(scrollChatToBottom, 250);
+            });
             ta.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAiMessage(); }
+                if (e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    sendAiMessage(); 
+                }
             });
         }
     });
