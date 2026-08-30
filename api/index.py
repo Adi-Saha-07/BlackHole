@@ -8,3 +8,4 @@ from app import create_app
 
 env_name = os.environ.get("FLASK_ENV", "production")
 app = create_app(env_name)
+handler = app

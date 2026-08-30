@@ -18,11 +18,31 @@ class Config:
     REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     CACHE_DEFAULT_TTL = int(os.environ.get("CACHE_DEFAULT_TTL", 600))  # 10 minutes
     
-    # SQLite Database Configuration (with /tmp fallback for Vercel / serverless)
-    _is_serverless = os.environ.get("VERCEL") == "1" or os.environ.get("NOW_REGION") is not None
-    _default_db_path = "/tmp/blackhole.db" if _is_serverless else os.path.join(os.path.abspath(os.path.dirname(__file__)), "blackhole.db")
-    
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{_default_db_path}")
+    # SQLite Database Configuration:
+    # On Serverless platforms (Vercel / Lambda), filesystem is read-only except /tmp
+    _db_env = os.environ.get("DATABASE_URL", "").strip()
+    if _db_env:
+        SQLALCHEMY_DATABASE_URI = _db_env
+    else:
+        _is_serverless = bool(
+            os.environ.get("VERCEL")
+            or os.environ.get("NOW_REGION")
+            or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+            or os.environ.get("LAMBDA_TASK_ROOT")
+        )
+        if _is_serverless:
+            SQLALCHEMY_DATABASE_URI = "sqlite:////tmp/blackhole.db"
+        else:
+            try:
+                _app_dir = os.path.abspath(os.path.dirname(__file__))
+                _local_db = os.path.join(_app_dir, "blackhole.db")
+                if os.access(_app_dir, os.W_OK):
+                    SQLALCHEMY_DATABASE_URI = f"sqlite:///{_local_db}"
+                else:
+                    SQLALCHEMY_DATABASE_URI = "sqlite:////tmp/blackhole.db"
+            except Exception:
+                SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class DevelopmentConfig(Config):
