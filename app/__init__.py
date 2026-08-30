@@ -36,4 +36,14 @@ def create_app(config_name="default"):
     from app.routes import main_bp
     flask_app.register_blueprint(main_bp)
 
+    @flask_app.errorhandler(404)
+    def page_not_found(e):
+        from flask import render_template
+        return render_template("index.html", query=None, results=None, cached=False, error=None), 404
+
+    @flask_app.errorhandler(500)
+    def server_error(e):
+        from flask import render_template
+        return render_template("index.html", query=None, results=None, cached=False, error="An unexpected server error occurred."), 500
+
     return flask_app
