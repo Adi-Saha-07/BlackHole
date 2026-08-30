@@ -1,2 +1,14 @@
+[project]
+name = "blackhole"
+version = "1.0.0"
+description = "BlackHole Flask Application"
+requires-python = ">=3.12"
+dependencies = [
+    "flask",
+    "requests",
+    "python-dotenv",
+    "google-generativeai",
+]
+
 [tool.vercel]
 entrypoint = "run:app"
