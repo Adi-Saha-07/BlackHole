@@ -33,28 +33,29 @@ def get_groq_api_key():
     return val if val and not val.startswith("your_") else ""
 
 def _save_env_key(env_name, value):
+    os.environ[env_name] = value
     try:
-        lines = []
-        if os.path.exists(ENV_PATH):
-            with open(ENV_PATH, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-        new_lines = []
-        found = False
-        for l in lines:
-            if l.strip().startswith(f"{env_name}="):
-                new_lines.append(f"{env_name}={value}\n")
-                found = True
-            else:
-                new_lines.append(l)
-        if not found:
-            new_lines.append(f"\n{env_name}={value}\n")
-        with open(ENV_PATH, "w", encoding="utf-8") as f:
-            f.writelines(new_lines)
-        os.environ[env_name] = value
-        _reload_env()
+        if os.path.exists(ENV_PATH) and os.access(os.path.dirname(ENV_PATH), os.W_OK):
+            lines = []
+            if os.path.exists(ENV_PATH):
+                with open(ENV_PATH, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+            new_lines = []
+            found = False
+            for l in lines:
+                if l.strip().startswith(f"{env_name}="):
+                    new_lines.append(f"{env_name}={value}\n")
+                    found = True
+                else:
+                    new_lines.append(l)
+            if not found:
+                new_lines.append(f"\n{env_name}={value}\n")
+            with open(ENV_PATH, "w", encoding="utf-8") as f:
+                f.writelines(new_lines)
+            _reload_env()
         return True
     except Exception:
-        return False
+        return True
 
 def save_gemini_api_key(key):
     key = key.strip().strip('"').strip("'")

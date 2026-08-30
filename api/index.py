@@ -9,3 +9,4 @@ if _root not in sys.path:
 from app import create_app  # noqa: E402
 
 app = create_app("production")
+handler = app

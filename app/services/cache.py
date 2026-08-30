@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 import time
@@ -27,6 +28,20 @@ class CacheService:
                 self.redis_client = None
                 return
         CacheService._redis_checked = True
+
+        # In serverless environments (Vercel / Lambda), skip default localhost Redis
+        is_serverless = bool(
+            os.environ.get("VERCEL")
+            or os.environ.get("NOW_REGION")
+            or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+            or os.environ.get("LAMBDA_TASK_ROOT")
+        )
+        if is_serverless and (not self.redis_url or "localhost" in self.redis_url or "127.0.0.1" in self.redis_url):
+            self.redis_client = None
+            CacheService._redis_available = False
+            logger.info("Serverless environment detected without remote Redis. Using in-memory cache.")
+            return
+
         try:
             client = redis.from_url(
                 self.redis_url, 
