@@ -65,7 +65,7 @@ BlackHole/
 ├── .gitignore                # Git ignore rules for clean commits
 ├── config.py                 # Configuration loader
 ├── requirements.txt          # Python dependencies
-├── run.py                    # Server entry point
+├── app.py                    # Server entry point
 └── README.md                 # Project documentation
 ```
 
@@ -115,7 +115,7 @@ Add your API keys to `.env`:
 ### 5. Run the Server
 
 ```bash
-python run.py
+python app.py
 ```
 
 Open your browser at **`http://127.0.0.1:5000`** 🎉

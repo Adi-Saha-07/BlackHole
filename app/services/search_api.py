@@ -63,16 +63,10 @@ def fetch_google_search(query: str, api_key: str = None, cx: str = None, num: in
             "source": "google_api"
         }
     except requests.RequestException as e:
-        logger.error(f"Error querying Google Custom Search API: {e}")
-        # In case of API quota error or network failure, provide fallback mock with error flag
-        return {
-            "query": query,
-            "total_results": "0",
-            "search_time": 0.0,
-            "items": [],
-            "error": str(e),
-            "source": "error_fallback"
-        }
+        logger.warning(f"Google Custom Search API error: {e}. Providing fallback search data.")
+        mock_data = get_mock_search_results(query, num=num)
+        mock_data["error"] = str(e)
+        return mock_data
 
 def get_mock_search_results(query: str, num: int = 10) -> dict:
     """Generates cosmic-themed mock search results for queries when API keys are not supplied."""
