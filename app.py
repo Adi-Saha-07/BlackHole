@@ -1,8 +1,10 @@
 import os
-from dotenv import load_dotenv
-
-# Automatically load environment variables from .env file
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    # Automatically load environment variables from .env file
+    load_dotenv()
+except ImportError:
+    pass
 
 from app import create_app
 
