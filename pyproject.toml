@@ -2,6 +2,13 @@
 name = "blackhole"
 version = "1.0.0"
 requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.0.0",
+    "flask-sqlalchemy>=3.1.1",
+    "redis>=5.0.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0"
+]
 
 [tool.vercel]
 entrypoint = "run:app"
