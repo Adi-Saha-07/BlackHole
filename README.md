@@ -1,4 +1,4 @@
-# 🌌 BlackHole — Fast Search Engine with Intelligent AI
+# BlackHole — Fast Search Engine with Intelligent AI
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.0%2B-black?style=flat-square&logo=flask)
