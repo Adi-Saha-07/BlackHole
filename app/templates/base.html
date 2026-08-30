@@ -88,7 +88,7 @@
                     id="ai-mic-btn"
                     aria-label="Voice typing"
                     title="Speak to type"
-                    onclick="startVoiceTyping('ai-chat-input', 'ai-mic-btn')"
+                    onclick="startVoiceTyping('ai-chat-input', 'ai-mic-btn', event)"
                 >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
@@ -189,11 +189,33 @@
     updateClock();
     setInterval(updateClock, 1000);
 
-    /* ── Web Speech API: Voice Typing ── */
-    function startVoiceTyping(targetInputId, btnId) {
+    /* ── Web Speech API: Voice Typing Engine ── */
+    var activeRecognition = null;
+    var activeMicBtn = null;
+
+    function showSpeechToast(msg) {
+        var existing = document.getElementById('bh-speech-toast');
+        if (existing) existing.remove();
+        var toast = document.createElement('div');
+        toast.id = 'bh-speech-toast';
+        toast.className = 'bh-speech-toast';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(function() {
+            toast.classList.add('hide');
+            setTimeout(function() { toast.remove(); }, 350);
+        }, 3500);
+    }
+
+    function startVoiceTyping(targetInputId, btnId, evt) {
+        if (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+        }
+
         var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert("Voice search is supported in Chrome, Edge, and modern browsers.");
+            showSpeechToast("Voice search isn't supported in this browser. Please use Chrome on Android/Desktop or Safari.");
             return;
         }
 
@@ -201,32 +223,103 @@
         var input = document.getElementById(targetInputId);
         if (!input) return;
 
-        var recognition = new SpeechRecognition();
-        recognition.lang = 'en-US';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+        // If this mic button is already recording, stop it (toggle off)
+        if (activeRecognition && activeMicBtn === btn) {
+            try { activeRecognition.stop(); } catch(e) {}
+            if (btn) btn.classList.remove('recording');
+            activeRecognition = null;
+            activeMicBtn = null;
+            return;
+        }
 
+        // If another mic was recording, stop it
+        if (activeRecognition) {
+            try { activeRecognition.stop(); } catch(e) {}
+            if (activeMicBtn) activeMicBtn.classList.remove('recording');
+            activeRecognition = null;
+            activeMicBtn = null;
+        }
+
+        var recognition;
+        try {
+            recognition = new SpeechRecognition();
+        } catch (e) {
+            showSpeechToast("Could not initialize microphone. Please check permissions.");
+            return;
+        }
+
+        // Multi-language support (English & Hindi support according to device locale)
+        recognition.lang = navigator.language || 'en-US';
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        recognition.continuous = false;
+
+        activeRecognition = recognition;
+        activeMicBtn = btn;
         if (btn) btn.classList.add('recording');
 
+        var recognizedText = '';
+
         recognition.onresult = function (event) {
-            var text = event.results[0][0].transcript;
-            if (text) {
-                input.value = text;
+            var interim = '';
+            var final = '';
+            for (var i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    final += event.results[i][0].transcript;
+                } else {
+                    interim += event.results[i][0].transcript;
+                }
+            }
+            var spoken = (final || interim).trim();
+            if (spoken) {
+                recognizedText = spoken;
+                input.value = spoken;
                 input.dispatchEvent(new Event('input'));
-                input.focus();
-                scrollChatToBottom();
+                if (targetInputId === 'ai-chat-input') {
+                    scrollChatToBottom();
+                }
             }
         };
 
-        recognition.onerror = function () {
+        recognition.onerror = function (event) {
             if (btn) btn.classList.remove('recording');
+            activeRecognition = null;
+            activeMicBtn = null;
+            
+            if (event.error === 'not-allowed') {
+                showSpeechToast("Microphone access denied. Please allow microphone permission in browser settings.");
+            } else if (event.error === 'network') {
+                showSpeechToast("Voice recognition requires an internet connection.");
+            } else if (event.error !== 'no-speech') {
+                showSpeechToast("Voice error: " + event.error);
+            }
         };
 
         recognition.onend = function () {
             if (btn) btn.classList.remove('recording');
+            activeRecognition = null;
+            activeMicBtn = null;
+
+            // Auto-submit search form on mobile/desktop if user spoke on homepage / header search bar
+            var val = recognizedText || input.value.trim();
+            if (val && (targetInputId === 'hero-search-input' || targetInputId === 'header-search-input')) {
+                var form = input.closest('form');
+                if (form) {
+                    var progressBar = document.getElementById('progress-bar');
+                    if (progressBar) progressBar.classList.add('active');
+                    form.submit();
+                }
+            }
         };
 
-        recognition.start();
+        try {
+            recognition.start();
+        } catch (e) {
+            if (btn) btn.classList.remove('recording');
+            activeRecognition = null;
+            activeMicBtn = null;
+            showSpeechToast("Microphone already active or unavailable. Tap again.");
+        }
     }
 
     /* ── Textarea auto-resize & keyboard focus handling ── */
