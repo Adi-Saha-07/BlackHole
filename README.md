@@ -40,6 +40,7 @@
 BlackHole/
 ├── app/
 │   ├── __init__.py           # Flask factory & database initialization
+│   ├── config.py             # Application configuration
 │   ├── routes.py             # Web routes (/search, /api/ai-chat, /api/trending)
 │   ├── models/
 │   │   ├── __init__.py
@@ -63,9 +64,9 @@ BlackHole/
 │   └── test_search.py        # Automated test suite
 ├── .env.example              # Environment variables template
 ├── .gitignore                # Git ignore rules for clean commits
-├── config.py                 # Configuration loader
+├── pyproject.toml            # Project packaging & Vercel deployment config
 ├── requirements.txt          # Python dependencies
-├── app.py                    # Server entry point
+├── run.py                    # Server entry point
 └── README.md                 # Project documentation
 ```
 
@@ -76,7 +77,7 @@ BlackHole/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/BlackHole.git
+git clone https://github.com/Adi-Saha-07/BlackHole.git
 cd BlackHole
 ```
 
@@ -115,7 +116,7 @@ Add your API keys to `.env`:
 ### 5. Run the Server
 
 ```bash
-python app.py
+python run.py
 ```
 
 Open your browser at **`http://127.0.0.1:5000`** 🎉
